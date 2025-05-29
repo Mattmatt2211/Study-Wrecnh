@@ -138,40 +138,48 @@
       }
     }
 
-    // Submit question handler
-    document.getElementById('questionForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+   // Submit question handler
+document.getElementById('questionForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-      const topic = document.getElementById('topic').value.trim();
-      const question = document.getElementById('questionText').value.trim();
+  const topic = document.getElementById('topic')?.value?.trim();
+  const question = document.getElementById('questionText')?.value?.trim();
+  const token = localStorage.getItem('token');
 
-      if (!topic || !question) {
-        return alert('Both fields are required.');
-      }
+  console.log("🧪 Token:", token);
+  console.log("📚 Topic:", topic);
+  console.log("💬 Question:", question);
 
-      try {
-        const res = await fetch('/api/questions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ topic, question })
-        });
+  if (!token || !topic || !question) {
+    alert("❌ Missing topic, question, or user.");
+    return;
+  }
 
-        const data = await res.json();
+  try {
+    const res = await fetch('/api/questions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ topic, question })
+    });
 
-        if (res.ok) {
-          alert('✅ Question submitted!');
-          document.getElementById('questionForm').reset();
-          loadQuestions();
-        } else {
-          alert(`❌ Error: ${data.error}`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Failed to submit question.');
-      }
+    const data = await res.json();
+
+    if (res.ok) {
+      alert('✅ Question submitted!');
+      document.getElementById('questionForm').reset();
+      loadQuestions();
+    } else {
+      alert(`❌ Error: ${data.error}`);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Failed to submit question.');
+  }
+});
+
     });
 
     window.onload = loadQuestions;
