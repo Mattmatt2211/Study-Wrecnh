@@ -92,17 +92,28 @@
   </div>
 
   <script>
+    // Fade loader
     window.addEventListener('load', () => {
       document.getElementById('loader').classList.add('fade-out');
     });
 
+    // Form submit
     document.getElementById('questionForm').addEventListener('submit', async function (e) {
       e.preventDefault();
+
       const token = localStorage.getItem('token');
       const topic = document.getElementById('topic').value.trim();
       const question = document.getElementById('questionText').value.trim();
 
-      if (!token) return alert('You must be logged in');
+      // 🚨 Debug logs
+      console.log("🧠 Token:", token);
+      console.log("📚 Topic:", topic);
+      console.log("💬 Question:", question);
+
+      if (!token) {
+        alert('⚠️ You must be logged in');
+        return;
+      }
 
       try {
         const res = await fetch('/api/questions', {
@@ -123,29 +134,37 @@
           alert("❌ Error: " + result.error);
         }
       } catch (err) {
-        console.error("Error submitting:", err);
+        console.error("❌ Submit error:", err);
         alert("Something went wrong.");
       }
     });
 
+    // Load existing questions
     async function loadQuestions() {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/questions/mine', {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      });
+      if (!token) return;
 
-      const data = await res.json();
-      const list = document.getElementById('questionsList');
-      list.innerHTML = '';
+      try {
+        const res = await fetch('/api/questions/mine', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
 
-      data.forEach(q => {
-        const li = document.createElement('li');
-        li.className = 'bg-slate-50 p-4 rounded shadow';
-        li.innerHTML = `<strong>${q.topic}:</strong><br>${q.question}`;
-        list.appendChild(li);
-      });
+        const data = await res.json();
+        const list = document.getElementById('questionsList');
+        list.innerHTML = '';
+
+        data.forEach(q => {
+          const li = document.createElement('li');
+          li.className = 'bg-slate-50 p-4 rounded shadow';
+          li.innerHTML = `<strong>${q.topic}:</strong><br>${q.question}`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error("❌ Load error:", err);
+        document.getElementById('questionsList').innerHTML = `<li class="text-red-500">Error loading questions.</li>`;
+      }
     }
 
     window.onload = loadQuestions;
