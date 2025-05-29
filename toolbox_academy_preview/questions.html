@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StudyWrench - Question</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans">
+
+  <!-- Loader -->
+  <div id="loader" class="fixed inset-0 bg-slate-900 text-white flex flex-col items-center justify-center z-50">
+    <h1 class="text-3xl font-bold animate-pulse text-blue-400">StudyWrench</h1>
+    <p class="text-slate-300">Loading question...</p>
+  </div>
+
+  <!-- Layout Wrapper -->
+  <div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md fixed h-full z-40">
+      <div class="p-6 border-b">
+        <h1 class="text-2xl font-bold text-blue-600">StudyWrench</h1>
+      </div>
+      <nav class="mt-6 space-y-4 px-6">
+        <a href="/dashboard" class="block text-slate-700 hover:text-blue-600 font-medium">Dashboard</a>
+        <a href="/questions.html" class="block text-slate-700 hover:text-blue-600 font-medium">Forum</a>
+        <a href="/auth" onclick="logout()" class="block text-red-500 hover:text-red-700 font-medium">Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 flex-grow p-10">
+      <div class="bg-white shadow rounded-xl p-6 mb-10">
+        <h2 id="topic" class="text-3xl font-bold text-blue-600">Loading...</h2>
+        <p id="questionText" class="text-slate-700 mt-2"></p>
+      </div>
+
+      <!-- Comments Section -->
+      <section class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold text-blue-800 mb-4">💬 Comments</h3>
+        <ul id="commentsList" class="space-y-4 mb-6"></ul>
+
+        <!-- Add Comment Form -->
+        <form id="commentForm" class="space-y-4">
+          <textarea id="commentInput" rows="3" placeholder="Write your comment..." class="w-full border border-slate-300 p-3 rounded"></textarea>
+          <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Post Comment</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in first.');
+      window.location.href = '/auth';
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const questionId = params.get('id');
+
+    async function loadQuestion() {
+      const res = await fetch('/api/questions/all');
+      const data = await res.json();
+      const q = data.find(item => item.id == questionId);
+
+      if (q) {
+        document.getElementById('topic').textContent = q.topic;
+        document.getElementById('questionText').textContent = q.question;
+      } else {
+        document.getElementById('topic').textContent = 'Question Not Found';
+      }
+
+      document.getElementById('loader').classList.add('hidden');
+    }
+
+    async function loadComments() {
+      const res = await fetch(`/api/questions/${questionId}/comments`);
+      const comments = await res.json();
+
+      const container = document.getElementById('commentsList');
+      container.innerHTML = '';
+
+      if (!comments.length) {
+        container.innerHTML = '<p class="text-slate-500">No comments yet.</p>';
+        return;
+      }
+
+      comments.forEach(c => {
+        const li = document.createElement('li');
+        li.className = 'bg-slate-50 p-3 rounded border border-slate-200';
+        li.textContent = c.comment;
+        container.appendChild(li);
+      });
+    }
+
+    document.getElementById('commentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const comment = document.getElementById('commentInput').value.trim();
+      if (!comment) return;
+
+      const res = await fetch(`/api/questions/${questionId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ comment })
+      });
+
+      const data = await res.json();
+      if (data.error) return alert(data.error);
+
+      document.getElementById('commentInput').value = '';
+      loadComments();
+    });
+
+    window.onload = () => {
+      loadQuestion();
+      loadComments();
+    };
+  </script>
+</body>
+</html>
