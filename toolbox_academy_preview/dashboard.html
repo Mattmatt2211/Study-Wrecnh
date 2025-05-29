@@ -6,41 +6,41 @@
   <title>StudyWrench Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body class="bg-slate-100 text-slate-800 font-sans">
 
-  <!-- 🔐 Require login -->
-  <script>
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Please log in first.');
-      window.location.href = '/auth';
-    }
-  </script>
+  <!-- Loader -->
+  <div id="loader" class="fixed inset-0 bg-slate-900 text-white flex flex-col items-center justify-center z-50">
+    <h1 class="text-3xl font-bold animate-pulse text-blue-400">StudyWrench</h1>
+    <p class="text-slate-300">Loading dashboard...</p>
+  </div>
 
   <div class="flex h-screen overflow-hidden">
+
     <!-- Sidebar -->
-    <aside class="w-64 bg-blue-800 text-white flex flex-col p-6 space-y-6">
-      <h1 class="text-2xl font-bold">📘 StudyWrench</h1>
-      <nav class="flex flex-col gap-3">
-        <button onclick="loadQuestions('mine')" class="text-left hover:bg-blue-700 px-4 py-2 rounded">🧑 My Questions</button>
-        <button onclick="loadQuestions('all')" class="text-left hover:bg-blue-700 px-4 py-2 rounded">🌍 All Questions</button>
-        <button onclick="loadQuestions('others')" class="text-left hover:bg-blue-700 px-4 py-2 rounded">👥 Other Users</button>
-        <a href="/questions.html" class="text-left hover:bg-blue-700 px-4 py-2 rounded block">📚 Forum</a>
-        <button class="text-left hover:bg-blue-700 px-4 py-2 rounded">📇 Flashcards (soon)</button>
-        <button class="text-left hover:bg-blue-700 px-4 py-2 rounded">🛠 Career Paths</button>
-        <button onclick="logout()" class="text-left bg-red-500 hover:bg-red-600 px-4 py-2 rounded mt-6">Logout</button>
+    <aside class="w-64 bg-white shadow-md fixed h-full z-40">
+      <div class="p-6 border-b">
+        <h1 class="text-2xl font-bold text-blue-600">StudyWrench</h1>
+      </div>
+      <nav class="mt-6 space-y-4 px-6">
+        <button onclick="loadQuestions('mine')" class="block text-slate-700 hover:text-blue-600 font-medium">🧑 My Questions</button>
+        <button onclick="loadQuestions('all')" class="block text-slate-700 hover:text-blue-600 font-medium">🌍 All Questions</button>
+        <button onclick="loadQuestions('others')" class="block text-slate-700 hover:text-blue-600 font-medium">👥 Other Users</button>
+        <a href="/questions.html" class="block text-slate-700 hover:text-blue-600 font-medium">📚 Forum</a>
+        <button class="block text-slate-400 font-medium" disabled>📇 Flashcards (coming)</button>
+        <button class="block text-slate-400 font-medium" disabled>🛠 Career Paths (coming)</button>
+        <a href="/auth" onclick="logout()" class="block text-red-500 hover:text-red-700 font-medium">Logout</a>
       </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-10 overflow-auto">
-      <h2 class="text-3xl font-bold text-blue-800 mb-6">🧠 Welcome to Your Dashboard</h2>
+    <main class="ml-64 p-10 flex-1 overflow-auto">
+      <h2 class="text-3xl font-bold text-blue-800 mb-6">🧠 Dashboard</h2>
 
-      <!-- Ask Question Form -->
-      <form id="questionForm" class="bg-white rounded shadow p-6 space-y-4 mb-8">
-        <h3 class="text-xl font-semibold">Ask a Question</h3>
-        <input id="topic" placeholder="Topic" required class="w-full border border-gray-300 p-3 rounded" />
-        <textarea id="question" placeholder="Write your question..." required class="w-full border border-gray-300 p-3 rounded"></textarea>
+      <!-- Ask a Question -->
+      <form id="questionForm" class="bg-white p-6 rounded shadow mb-8 space-y-4">
+        <h3 class="text-xl font-semibold text-slate-800">Ask a Question</h3>
+        <input id="topic" class="w-full border border-slate-300 p-3 rounded" placeholder="Topic" required>
+        <textarea id="question" class="w-full border border-slate-300 p-3 rounded" placeholder="Write your question..." required></textarea>
         <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Submit</button>
       </form>
 
@@ -56,14 +56,39 @@
     </main>
   </div>
 
-  <!-- JavaScript -->
   <script>
-    function logout() {
-      localStorage.removeItem('token');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in first.');
       window.location.href = '/auth';
     }
 
-    // Load Questions
+    document.getElementById('questionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const topic = document.getElementById('topic').value.trim() || null;
+      const question = document.getElementById('question').value.trim() || null;
+
+      if (!topic || !question) return alert('Please fill out both fields.');
+
+      const res = await fetch('/api/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ topic, question })
+      });
+
+      const data = await res.json();
+      alert(data.message || data.error || 'Unknown response');
+      loadQuestions('mine');
+      document.getElementById('questionForm').reset();
+    });
+
+    function logout() {
+      localStorage.removeItem('token');
+    }
+
     async function loadQuestions(type = 'mine') {
       const container = document.getElementById('questionsContainer');
       container.innerHTML = 'Loading...';
@@ -75,58 +100,26 @@
 
       try {
         const res = await fetch(url, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-
         const data = await res.json();
         container.innerHTML = '';
-
         data.forEach(q => {
           const div = document.createElement('div');
           div.className = 'bg-white p-4 rounded shadow';
           div.innerHTML = `
             <p class="text-blue-700 font-bold">${q.topic}</p>
-            <p class="text-gray-700">${q.question}</p>
-          `;
+            <p class="text-slate-700">${q.question}</p>`;
           container.appendChild(div);
         });
       } catch (err) {
         container.innerHTML = '<p class="text-red-500">Error loading questions.</p>';
       }
+
+      document.getElementById('loader').classList.add('hidden');
     }
 
-    // Submit Question
-    document.getElementById('questionForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const topic = document.getElementById('topic').value.trim();
-      const question = document.getElementById('question').value.trim();
-
-      if (!topic || !question) {
-        alert('Please fill out both fields.');
-        return;
-      }
-
-      const res = await fetch('/api/questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ topic, question })
-      });
-
-      const data = await res.json();
-      alert(data.message || data.error);
-      loadQuestions('mine');
-      document.getElementById('questionForm').reset();
-    });
-
-    // Load default view
-    window.onload = () => {
-      loadQuestions('mine');
-    };
+    window.onload = () => loadQuestions('mine');
   </script>
 </body>
 </html>
-
