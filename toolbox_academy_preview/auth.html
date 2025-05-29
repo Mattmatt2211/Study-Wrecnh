@@ -56,6 +56,50 @@
   <footer class="text-center py-6 text-sm text-slate-500 bg-slate-50 mt-10">
     © 2025 StudyWrench. All rights reserved.
   </footer>
+<script>
+  // Handle Signup
+  document.getElementById('signupForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
+    const email = this.querySelector('input[type="email"]').value;
+    const password = this.querySelectorAll('input[type="password"]')[0].value;
+    const confirmPassword = this.querySelectorAll('input[type="password"]')[1].value;
+
+    if (password !== confirmPassword) {
+      return alert("Passwords do not match");
+    }
+
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const text = await res.text();
+    alert("Signup: " + text);
+  });
+
+  // Handle Login
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = this.querySelector('input[type="email"]').value;
+    const password = this.querySelector('input[type="password"]').value;
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (data.token) {
+      alert("Login success! Token: " + data.token);
+      // Optionally: localStorage.setItem('token', data.token);
+    } else {
+      alert("Login failed: " + (data.error || 'Unknown error'));
+    }
+  });
+</script>
 </body>
 </html>
