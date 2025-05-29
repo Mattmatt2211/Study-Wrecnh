@@ -1,25 +1,27 @@
+// middleware/auth.js
 const jwt = require('jsonwebtoken');
 
-module.exports = (req, res, next) => {
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Expected format: "Bearer <token>"
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'No token provided' });
+  if (!token) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
-  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret', (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token.' });
+    }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
-      id: decoded.userId,  // ✅ This must match how you signed it in auth.js
-      role: decoded.role
+      id: decoded.userId,
+      role: decoded.role || 'user',
     };
-    next();
-  } catch (err) {
-    console.error('❌ Invalid token:', err.message);
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
 
+    next();
+  });
+}
+
+module.exports = authenticateToken;
 
