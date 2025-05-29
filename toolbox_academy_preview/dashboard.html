@@ -2,98 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudyWrecnh Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyWrench - Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #loader {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1e293b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .fade-out {
+      animation: fadeOut 0.7s forwards;
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; visibility: hidden; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="bg-slate-100 text-slate-800 font-sans">
 
+  <!-- Loader -->
+  <div id="loader">
+    <h1 class="text-3xl font-bold mb-2 animate-pulse text-blue-400">StudyWrench</h1>
+    <p class="text-slate-300">Loading your dashboard...</p>
+  </div>
+
+  <!-- Layout -->
   <div class="flex min-h-screen">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md p-6">
-      <h2 class="text-2xl font-bold text-blue-600 mb-8">📚 StudyWrecnh</h2>
-      <nav class="space-y-4 text-gray-700 font-medium">
-        <a href="dashboard.html" class="block text-blue-600">Ask Questions</a>
-        <a href="#" class="block hover:text-blue-500">Flashcards</a>
-        <a href="#" class="block hover:text-blue-500">Career Paths</a>
-        <a href="#" class="block hover:text-blue-500">Study Guides</a>
+    <aside class="w-64 bg-white shadow-md fixed h-full z-40">
+      <div class="p-6 border-b">
+        <h1 class="text-2xl font-bold text-blue-600">StudyWrench</h1>
+      </div>
+      <nav class="mt-6 space-y-4 px-6">
+        <a href="#ask" class="block text-slate-700 hover:text-blue-600 font-medium">Ask Questions</a>
+        <a href="#flashcards" class="block text-slate-700 hover:text-blue-600 font-medium">Flashcards</a>
+        <a href="#careers" class="block text-slate-700 hover:text-blue-600 font-medium">Career Paths</a>
+        <a href="#guides" class="block text-slate-700 hover:text-blue-600 font-medium">Study Guides</a>
+        <a href="index.html" class="block text-sm text-slate-400 mt-8 hover:text-slate-700">← Back to Home</a>
       </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-8">
-      <h1 class="text-3xl font-bold mb-6">Welcome to Your Dashboard</h1>
+    <main class="ml-64 flex-grow p-10">
+      <div class="bg-white shadow rounded-xl p-6 mb-10">
+        <h2 class="text-3xl font-bold text-blue-600">Welcome to Your Dashboard</h2>
+        <p class="text-slate-600">Submit a question or explore resources below.</p>
+      </div>
 
-      <!-- Ask a Question -->
-      <section class="mb-10 bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold mb-4">Ask a Question</h2>
+      <!-- Ask Question -->
+      <section id="ask" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Ask a Question</h3>
         <form id="questionForm" class="space-y-4">
-          <input type="text" id="topic" placeholder="Topic" class="w-full p-2 border rounded" required />
-          <textarea id="questionText" rows="4" placeholder="Your question..." class="w-full p-2 border rounded" required></textarea>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit</button>
+          <input type="text" id="topic" placeholder="Topic (e.g. HVAC, Electrical)" class="w-full px-4 py-2 border border-slate-300 rounded" required>
+          <textarea id="questionText" placeholder="Type your question here..." class="w-full px-4 py-2 border border-slate-300 rounded h-32" required></textarea>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded font-bold">
+            Submit
+          </button>
         </form>
       </section>
 
-      <!-- My Questions -->
-      <section class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold mb-4">My Questions</h2>
-        <ul id="myQuestionsList" class="space-y-2 list-disc list-inside text-gray-700"></ul>
+      <!-- Submitted Questions -->
+      <section class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Submitted Questions</h3>
+        <ul id="questionsList" class="space-y-2 text-slate-700"></ul>
+      </section>
+
+      <!-- Flashcards -->
+      <section id="flashcards" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Flashcards</h3>
+        <p class="text-slate-500">Coming soon...</p>
+      </section>
+
+      <!-- Career Paths -->
+      <section id="careers" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Career Paths</h3>
+        <p class="text-slate-500">Coming soon...</p>
+      </section>
+
+      <!-- Study Guides -->
+      <section id="guides" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Study Guides</h3>
+        <p class="text-slate-500">Coming soon...</p>
       </section>
     </main>
   </div>
 
-  <!-- Scripts -->
   <script>
-    const token = localStorage.getItem('token');
+    // Hide loader after load
+    window.addEventListener('load', () => {
+      document.getElementById('loader').classList.add('fade-out');
+    });
 
-    // 🚨 Redirect if not logged in
+    // Auth token check
+    const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in first.');
       window.location.href = '/auth.html';
     }
 
-    // 🧾 Load user's questions
+    // Load user's questions
     async function loadQuestions() {
       try {
         const res = await fetch('/api/questions/mine', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-
         const data = await res.json();
 
+        const list = document.getElementById('questionsList');
+        list.innerHTML = '';
+
         if (!Array.isArray(data)) {
-          console.error("❌ Expected array, got:", data);
+          list.innerHTML = '<li class="text-red-500">❌ Failed to load questions.</li>';
           return;
         }
 
-        const list = document.getElementById('myQuestionsList');
-        list.innerHTML = '';
-
-        data.forEach(q => {
-          const item = document.createElement('li');
-          item.className = "bg-gray-100 p-3 rounded shadow-sm";
-          item.textContent = `${q.topic}: ${q.question}`;
-          list.appendChild(item);
+        data.reverse().forEach(q => {
+          const li = document.createElement('li');
+          li.className = 'bg-slate-50 p-4 rounded shadow';
+          li.innerHTML = `<strong>${q.topic}</strong><br>${q.question}`;
+          list.appendChild(li);
         });
-
       } catch (err) {
-        console.error("❌ Error loading questions:", err);
+        console.error(err);
+        document.getElementById('questionsList').innerHTML = '<li class="text-red-500">❌ Error loading questions.</li>';
       }
     }
 
-    // ✍️ Submit question
+    // Submit question handler
     document.getElementById('questionForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
       const topic = document.getElementById('topic').value.trim();
       const question = document.getElementById('questionText').value.trim();
 
-      if (!token || !topic || !question) {
-        alert('All fields are required.');
-        return;
+      if (!topic || !question) {
+        return alert('Both fields are required.');
       }
 
       try {
@@ -107,6 +160,7 @@
         });
 
         const data = await res.json();
+
         if (res.ok) {
           alert('✅ Question submitted!');
           document.getElementById('questionForm').reset();
@@ -114,16 +168,13 @@
         } else {
           alert(`❌ Error: ${data.error}`);
         }
-
       } catch (err) {
-        console.error('❌ Submit failed:', err);
-        alert('Submit failed.');
+        console.error(err);
+        alert('Failed to submit question.');
       }
     });
 
-    // 🔁 Load on page load
     window.onload = loadQuestions;
   </script>
-
 </body>
 </html>
