@@ -12,15 +12,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve index.html and other static files from the root directory
+// Log every request for debugging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+// Serve static files from the root directory
 app.use(express.static(__dirname));
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 
-// Fallback: serve index.html for all non-API routes
-app.get('*', (req, res) => {
+// Fallback: only for GET requests not starting with /api
+app.get('*', (req, res, next) => {
+  if (req.originalUrl.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
