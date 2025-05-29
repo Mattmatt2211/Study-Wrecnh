@@ -26,8 +26,16 @@
       to { opacity: 0; visibility: hidden; }
     }
   </style>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      document.write('<style>body{display:none}</style>');
+      window.location.href = '/auth.html';
+    }
+  </script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans">
+
   <!-- Loader -->
   <div id="loader">
     <h1 class="text-3xl font-bold mb-2 animate-pulse text-blue-400">StudyWrench</h1>
@@ -92,12 +100,6 @@
   </div>
 
   <script>
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Please log in first.');
-      window.location.href = '/auth.html';
-    }
-
     window.addEventListener('load', () => {
       document.getElementById('loader').classList.add('fade-out');
       loadQuestions();
@@ -116,7 +118,7 @@
         return;
       }
 
-      data.reverse().forEach(q => {
+      data.forEach(q => {
         const li = document.createElement('li');
         li.className = 'bg-slate-50 p-4 rounded shadow flex justify-between items-start';
         li.innerHTML = `
@@ -141,7 +143,6 @@
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
-
         if (res.ok) {
           alert('✅ Deleted!');
           loadQuestions();
@@ -171,7 +172,6 @@
       saveBtn.addEventListener('click', async () => {
         const newText = input.value.trim();
         if (!newText) return alert("❌ Cannot save empty question.");
-
         try {
           const res = await fetch(`/api/questions/${id}`, {
             method: 'PUT',
@@ -181,7 +181,6 @@
             },
             body: JSON.stringify({ question: newText })
           });
-
           if (res.ok) {
             alert('✅ Updated!');
             loadQuestions();
@@ -200,7 +199,6 @@
       e.preventDefault();
       const topic = document.getElementById('topic')?.value?.trim();
       const question = document.getElementById('questionText')?.value?.trim();
-
       if (!token || !topic || !question) {
         alert("❌ Missing topic, question, or user.");
         return;
