@@ -1,44 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>StudyWrench - Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    #loader {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #1e293b;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-    .fade-out {
-      animation: fadeOut 0.7s forwards;
-    }
-    @keyframes fadeOut {
-      to { opacity: 0; visibility: hidden; }
-    }
-  </style>
-</head>
-<body class="bg-slate-100 text-slate-800 font-sans">
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>StudyWrench - Dashboard</title>
+  <title>StudyWrench Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans">
+<body class="bg-slate-100 font-sans text-slate-800">
 
-  <!-- 🚨 Protect route with token check -->
+  <!-- 🔐 Require Token -->
   <script>
     const token = localStorage.getItem('token');
     if (!token) {
@@ -47,128 +17,111 @@
     }
   </script>
 
-  <!-- Loader -->
-  <div id="loader">
-    <!-- etc -->
-  </div>
-
-  <!-- Loader -->
-  <div id="loader">
-    <h1 class="text-3xl font-bold mb-2 animate-pulse text-blue-400">StudyWrench</h1>
-    <p class="text-slate-300">Loading your dashboard...</p>
-  </div>
-
-  <!-- Layout Wrapper -->
+  <!-- Flex Layout -->
   <div class="flex min-h-screen">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md fixed h-full z-40">
-      <div class="p-6 border-b">
-        <h1 class="text-2xl font-bold text-blue-600">StudyWrench</h1>
-      </div>
-      <nav class="mt-6 space-y-4 px-6">
-        <a href="#ask" class="block text-slate-700 hover:text-blue-600 font-medium">Ask Questions</a>
-        <a href="#flashcards" class="block text-slate-700 hover:text-blue-600 font-medium">Flashcards</a>
-        <a href="#careers" class="block text-slate-700 hover:text-blue-600 font-medium">Career Paths</a>
-        <a href="#guides" class="block text-slate-700 hover:text-blue-600 font-medium">Study Guides</a>
-        <a href="index.html" class="block text-sm text-slate-400 mt-8 hover:text-slate-700">← Back to Home</a>
+    <!-- 📚 Sidebar -->
+    <aside class="w-64 bg-blue-800 text-white p-6 space-y-6">
+      <h2 class="text-2xl font-bold">📘 StudyWrench</h2>
+      <nav class="space-y-4">
+        <button onclick="loadQuestions('mine')" class="w-full text-left hover:bg-blue-700 px-3 py-2 rounded">🧑‍💻 My Questions</button>
+        <button onclick="loadQuestions('all')" class="w-full text-left hover:bg-blue-700 px-3 py-2 rounded">🌍 All Questions</button>
+        <button onclick="loadQuestions('others')" class="w-full text-left hover:bg-blue-700 px-3 py-2 rounded">👥 Other Users</button>
+        <button class="w-full text-left hover:bg-blue-700 px-3 py-2 rounded">📇 Flashcards (soon)</button>
+        <button class="w-full text-left hover:bg-blue-700 px-3 py-2 rounded">🛠 Career Paths</button>
+        <button class="w-full text-left hover:bg-blue-700 px-3 py-2 rounded">📖 Study Guides</button>
+        <button onclick="logout()" class="w-full text-left bg-red-500 hover:bg-red-600 px-3 py-2 rounded mt-4">Logout</button>
       </nav>
     </aside>
 
-    <!-- Main Content -->
-    <main class="ml-64 flex-grow p-10">
-      <div class="bg-white shadow rounded-xl p-6 mb-10">
-        <h2 class="text-3xl font-bold text-blue-600">Welcome to Your Dashboard</h2>
-        <p class="text-slate-600">Submit a question or explore resources below.</p>
+    <!-- 📄 Main Content -->
+    <main class="flex-1 p-8">
+      <h1 class="text-3xl font-bold mb-4">🧠 Welcome to Your Dashboard</h1>
+
+      <!-- Ask Form -->
+      <form id="questionForm" class="bg-white p-6 rounded shadow mb-8 space-y-4">
+        <h2 class="text-xl font-semibold">Ask a Question</h2>
+        <input type="text" id="topic" placeholder="Topic" required class="w-full px-4 py-2 border border-gray-300 rounded" />
+        <textarea id="question" placeholder="Your question..." required class="w-full px-4 py-2 border border-gray-300 rounded"></textarea>
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Submit</button>
+      </form>
+
+      <!-- Dynamic Question Buttons -->
+      <div class="flex space-x-4 mb-6">
+        <button onclick="loadQuestions('mine')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">My Questions</button>
+        <button onclick="loadQuestions('all')" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">All Questions</button>
+        <button onclick="loadQuestions('others')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Other Users</button>
       </div>
 
-      <!-- Ask Questions Section -->
-      <section id="ask" class="bg-white shadow rounded-xl p-6 mb-10">
-        <h3 class="text-xl font-semibold mb-4">Ask a Question</h3>
-        <form id="questionForm" class="space-y-4">
-          <input type="text" id="topic" placeholder="Topic (e.g. HVAC, Electrical)" class="w-full px-4 py-2 border border-slate-300 rounded" required>
-          <textarea id="questionText" placeholder="Type your question here..." class="w-full px-4 py-2 border border-slate-300 rounded h-32" required></textarea>
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded font-bold">
-            Submit
-          </button>
-        </form>
-      </section>
-
-      <!-- Questions Display -->
-      <section class="bg-white shadow rounded-xl p-6 mb-10">
-        <h3 class="text-xl font-semibold mb-4">Submitted Questions</h3>
-        <ul id="questionsList" class="space-y-2"></ul>
-      </section>
-
-      <!-- Flashcards Section -->
-      <section id="flashcards" class="bg-white shadow rounded-xl p-6 mb-10">
-        <h3 class="text-xl font-semibold mb-4">Flashcards</h3>
-        <p class="text-slate-500">Coming soon...</p>
-      </section>
-
-      <!-- Career Paths Section -->
-      <section id="careers" class="bg-white shadow rounded-xl p-6 mb-10">
-        <h3 class="text-xl font-semibold mb-4">Career Paths</h3>
-        <p class="text-slate-500">Coming soon...</p>
-      </section>
-
-      <!-- Study Guides Section -->
-      <section id="guides" class="bg-white shadow rounded-xl p-6 mb-10">
-        <h3 class="text-xl font-semibold mb-4">Study Guides</h3>
-        <p class="text-slate-500">Coming soon...</p>
-      </section>
+      <!-- Questions -->
+      <div id="questionsContainer" class="space-y-4"></div>
     </main>
   </div>
 
+  <!-- Scripts -->
   <script>
-    // Hide loader when ready
-    window.addEventListener('load', () => {
-      document.getElementById('loader').classList.add('fade-out');
-    });
+    // Load Questions
+    async function loadQuestions(type = 'mine') {
+      const container = document.getElementById('questionsContainer');
+      container.innerHTML = 'Loading...';
 
-    // Submit question
-    document.getElementById('questionForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const token = localStorage.getItem('token');
-      const topic = document.getElementById('topic').value;
-      const question = document.getElementById('questionText').value;
+      let url = '/api/questions';
+      if (type === 'mine') url += '/mine';
+      else if (type === 'all') url += '/all';
+      else if (type === 'others') url += '/others';
 
-      if (!token) return alert('You must be logged in');
-
-      const user_id = 1; // Temporary placeholder
-
-      const res = await fetch('/api/questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, topic, user_id })
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
-      const text = await res.text();
-      alert(text);
-      document.getElementById('questionForm').reset();
-      loadQuestions();
-    });
-
-    // Load questions
-    async function loadQuestions() {
-      const res = await fetch('/api/questions');
       const data = await res.json();
 
-      const list = document.getElementById('questionsList');
-      list.innerHTML = '';
-
-      data.reverse().forEach(q => {
-        const item = document.createElement('li');
-        item.className = 'bg-slate-50 p-4 rounded shadow';
-        item.innerHTML = '<strong>' + q.topic + ':</strong><br>' + q.question;
-        list.appendChild(item);
+      container.innerHTML = '';
+      data.forEach(q => {
+        const div = document.createElement('div');
+        div.className = 'bg-white p-4 rounded shadow';
+        div.innerHTML = `
+          <p class="font-bold text-blue-800">${q.topic}</p>
+          <p>${q.question}</p>
+        `;
+        container.appendChild(div);
       });
     }
 
-    window.onload = loadQuestions;
-  </script>
+    // Ask a Question
+    document.getElementById('questionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const topic = document.getElementById('topic').value;
+      const question = document.getElementById('question').value;
 
+      const res = await fetch('/api/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ topic, question })
+      });
+
+      const data = await res.json();
+      alert(data.message || data.error);
+      loadQuestions('mine'); // Refresh after submit
+      document.getElementById('questionForm').reset();
+    });
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/auth';
+    }
+
+    // Default load
+    window.onload = () => {
+      loadQuestions('mine');
+    }
+  </script>
 </body>
 </html>
 
-   
