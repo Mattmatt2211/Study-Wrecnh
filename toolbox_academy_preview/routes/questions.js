@@ -1,14 +1,18 @@
+// routes/questions.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const verifyToken = require('../middleware/auth');
 
-// 📌 Create a new question (Protected Route)
+// Create a new question
 router.post('/', verifyToken, async (req, res) => {
   const { topic, question } = req.body;
   const userId = req.user?.id;
 
+  console.log("🔐 Incoming POST", { topic, question, userId });
+
   if (!topic || !question || !userId) {
+    console.log("❌ Missing data:", { topic, question, userId });
     return res.status(400).json({ error: 'Missing topic, question, or user.' });
   }
 
@@ -19,12 +23,12 @@ router.post('/', verifyToken, async (req, res) => {
     );
     res.status(201).json({ message: 'Question submitted successfully' });
   } catch (err) {
-    console.error('❌ DB Insert Error:', err.message);
+    console.error('❌ DB Error:', err.message);
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-// 📌 Get questions submitted by this user
+// Get questions by current user
 router.get('/mine', verifyToken, async (req, res) => {
   const userId = req.user?.id;
 
@@ -40,7 +44,7 @@ router.get('/mine', verifyToken, async (req, res) => {
   }
 });
 
-// 📌 Get all questions (public)
+// Get all questions (public)
 router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.query(
