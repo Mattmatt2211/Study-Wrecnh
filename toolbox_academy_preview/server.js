@@ -25,6 +25,11 @@ app.use(express.static(__dirname));
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 
+// ✅ Serve custom auth.html page
+app.get('/auth', (req, res) => {
+  res.sendFile(path.join(__dirname, 'auth.html'));
+});
+
 // Fallback: only for GET requests not starting with /api
 app.get('*', (req, res, next) => {
   if (req.originalUrl.startsWith('/api/')) {
