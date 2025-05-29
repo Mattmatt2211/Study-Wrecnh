@@ -1,72 +1,55 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
-const authenticateToken = require('../middleware/auth');
+const pool = require('../db');
+const verifyToken = require('../middleware/auth');
 
-// 🔐 POST /api/questions — Submit a question
-router.post('/', authenticateToken, async (req, res) => {
-  let { topic, question } = req.body;
+// 📌 Create a new question (Protected Route)
+router.post('/', verifyToken, async (req, res) => {
+  const { topic, question } = req.body;
   const userId = req.user?.id;
 
-  console.log("📥 Submitting Question:");
-  console.log("🧠 User ID:", userId);
-  console.log("📚 Topic:", topic);
-  console.log("💬 Question:", question);
-
-  if (!userId || !topic || !question) {
+  if (!topic || !question || !userId) {
     return res.status(400).json({ error: 'Missing topic, question, or user.' });
   }
 
   try {
-    await db.execute(
+    const [result] = await pool.query(
       'INSERT INTO questions (user_id, topic, question) VALUES (?, ?, ?)',
       [userId, topic, question]
     );
-    res.json({ message: 'Question submitted successfully!' });
+    res.status(201).json({ message: 'Question submitted successfully' });
   } catch (err) {
-    console.error("❌ DB ERROR:", err.message);
-    res.status(500).json({ error: 'Failed to submit question.' });
+    console.error('❌ DB Insert Error:', err.message);
+    res.status(500).json({ error: 'Database error' });
   }
 });
 
-// 🔐 GET /api/questions/mine — Get logged-in user's questions
-router.get('/mine', authenticateToken, async (req, res) => {
+// 📌 Get questions submitted by this user
+router.get('/mine', verifyToken, async (req, res) => {
+  const userId = req.user?.id;
+
   try {
-    const [rows] = await db.execute(
+    const [rows] = await pool.query(
       'SELECT * FROM questions WHERE user_id = ? ORDER BY id DESC',
-      [req.user.id]
+      [userId]
     );
     res.json(rows);
   } catch (err) {
-    console.error('❌ Mine Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch your questions.' });
+    console.error('❌ Fetch Mine Error:', err.message);
+    res.status(500).json({ error: 'Could not fetch your questions' });
   }
 });
 
-// 🔐 GET /api/questions/all — Get all questions
-router.get('/all', authenticateToken, async (req, res) => {
+// 📌 Get all questions (public)
+router.get('/', async (req, res) => {
   try {
-    const [rows] = await db.execute(
-      'SELECT * FROM questions ORDER BY id DESC'
+    const [rows] = await pool.query(
+      'SELECT q.id, q.topic, q.question, q.created_at, u.email FROM questions q JOIN users u ON q.user_id = u.id ORDER BY q.id DESC'
     );
     res.json(rows);
   } catch (err) {
-    console.error('❌ All Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch questions.' });
-  }
-});
-
-// 🔐 GET /api/questions/others — Get other users’ questions
-router.get('/others', authenticateToken, async (req, res) => {
-  try {
-    const [rows] = await db.execute(
-      'SELECT * FROM questions WHERE user_id != ? ORDER BY id DESC',
-      [req.user.id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error('❌ Others Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch others\' questions.' });
+    console.error('❌ Fetch All Error:', err.message);
+    res.status(500).json({ error: 'Could not fetch questions' });
   }
 });
 
