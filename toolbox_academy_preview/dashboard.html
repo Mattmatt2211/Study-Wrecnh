@@ -37,7 +37,6 @@
 
   <!-- Layout -->
   <div class="flex min-h-screen">
-
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-md fixed h-full z-40">
       <div class="p-6 border-b">
@@ -103,7 +102,6 @@
       document.getElementById('loader').classList.add('fade-out');
     });
 
-    // Auth token check
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in first.');
@@ -129,7 +127,11 @@
         data.reverse().forEach(q => {
           const li = document.createElement('li');
           li.className = 'bg-slate-50 p-4 rounded shadow';
-          li.innerHTML = `<strong>${q.topic}</strong><br>${q.question}`;
+          li.innerHTML = `
+            <a href="questions.html?id=${q.id}" class="text-blue-600 hover:underline">
+              <strong>${q.topic}</strong><br>${q.question}
+            </a>
+          `;
           list.appendChild(li);
         });
       } catch (err) {
@@ -138,47 +140,47 @@
       }
     }
 
-   // Submit question handler
-document.getElementById('questionForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
+    // Submit question handler
+    document.getElementById('questionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-  const topic = document.getElementById('topic')?.value?.trim();
-  const question = document.getElementById('questionText')?.value?.trim();
-  const token = localStorage.getItem('token');
+      const topic = document.getElementById('topic')?.value?.trim();
+      const question = document.getElementById('questionText')?.value?.trim();
 
-  console.log("🧪 Token:", token);
-  console.log("📚 Topic:", topic);
-  console.log("💬 Question:", question);
+      console.log("🧪 Token:", token);
+      console.log("📚 Topic:", topic);
+      console.log("💬 Question:", question);
 
-  if (!token || !topic || !question) {
-    alert("❌ Missing topic, question, or user.");
-    return;
-  }
+      if (!token || !topic || !question) {
+        alert("❌ Missing topic, question, or user.");
+        return;
+      }
 
-  try {
-    const res = await fetch('/api/questions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ topic, question })
+      try {
+        const res = await fetch('/api/questions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ topic, question })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('✅ Question submitted!');
+          document.getElementById('questionForm').reset();
+          loadQuestions();
+        } else {
+          alert(`❌ Error: ${data.error}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to submit question.');
+      }
     });
 
-    const data = await res.json();
-
-    if (res.ok) {
-      alert('✅ Question submitted!');
-      document.getElementById('questionForm').reset();
-      loadQuestions();
-    } else {
-      alert(`❌ Error: ${data.error}`);
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Failed to submit question.');
-  }
-});
     window.onload = loadQuestions;
   </script>
 </body>
