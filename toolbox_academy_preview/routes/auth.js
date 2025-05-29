@@ -1,73 +1,66 @@
+// routes/auth.js
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const router = express.Router();
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
-const router = express.Router();
 
-// ✅ Signup route
-router.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
+// 🔐 POST /api/auth/register
+router.post('/register', async (req, res) => {
+  const { username, password } = req.body;
 
-  if (!email || !password)
-    return res.status(400).json({ error: 'Email and password are required' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required.' });
+  }
 
   try {
-    // Check if user exists
-    const [existing] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-    if (existing.length > 0)
-      return res.status(400).json({ error: 'Email already in use' });
+    // Check if user already exists
+    const [existing] = await db.execute('SELECT id FROM users WHERE username = ?', [username]);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'Username already taken.' });
+    }
 
-    // Hash password
-    const hashed = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.execute('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
 
-    // Insert user
-    const [result] = await db.execute(
-      'INSERT INTO users (email, password) VALUES (?, ?)',
-      [email, hashed]
-    );
-
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: result.insertId, role: 'user' },  // ✅ userId for downstream use
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.json({ token });
+    res.status(201).json({ message: 'User registered successfully.' });
   } catch (err) {
-    console.error('❌ Signup error:', err.message);
-    res.status(500).json({ error: 'Signup failed' });
+    console.error('❌ Registration error:', err.message);
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 });
 
-// ✅ Login route
+// 🔐 POST /api/auth/login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  if (!email || !password)
-    return res.status(400).json({ error: 'Email and password are required' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required.' });
+  }
 
   try {
-    const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
-    const user = rows[0];
+    const [users] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
+    const user = users[0];
 
-    if (!user)
-      return res.status(400).json({ error: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match)
-      return res.status(400).json({ error: 'Invalid credentials' });
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
 
     const token = jwt.sign(
-      { userId: user.id, role: user.role },  // ✅ use `userId` for consistency
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { userId: user.id, role: user.role || 'user' },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '24h' }
     );
 
     res.json({ token });
   } catch (err) {
     console.error('❌ Login error:', err.message);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 });
 
