@@ -1,72 +1,72 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
-const authenticateToken = require('../middleware/auth');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyWrench - Question</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans">
 
-// 🔐 POST /api/questions — Submit a question
-router.post('/', authenticateToken, async (req, res) => {
-  const { topic, question } = req.body;
+  <!-- Navigation -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-600">StudyWrench</h1>
+      <a href="dashboard.html" class="text-sm text-blue-500 hover:text-blue-700">← Back to Dashboard</a>
+    </div>
+  </header>
 
-  console.log('📥 Incoming question submission:');
-  console.log('🧠 Token user:', req.user);
-  console.log('📚 Topic:', topic);
-  console.log('💬 Question:', question);
+  <!-- Question Display -->
+  <main class="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-xl shadow">
+    <div id="question" class="space-y-4">
+      <p class="text-gray-500 italic">Loading question...</p>
+    </div>
+  </main>
 
-  if (!topic || !question) {
-    return res.status(400).json({ error: 'Both topic and question are required.' });
-  }
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Please log in first.");
+      window.location.href = "/auth.html";
+    }
 
-  try {
-    await db.execute(
-      'INSERT INTO questions (user_id, topic, question) VALUES (?, ?, ?)',
-      [req.user.id, topic || null, question || null]
-    );
-    res.json({ message: 'Question submitted successfully!' });
-  } catch (err) {
-    console.error('❌ DB INSERT ERROR:', err.message);
-    res.status(500).json({ error: 'Failed to submit question.' });
-  }
-});
+    const urlParams = new URLSearchParams(window.location.search);
+    const questionId = urlParams.get('id');
 
-// 🔐 GET /api/questions/mine — Get only current user’s questions
-router.get('/mine', authenticateToken, async (req, res) => {
-  try {
-    const [rows] = await db.execute(
-      'SELECT * FROM questions WHERE user_id = ? ORDER BY id DESC',
-      [req.user.id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error('❌ Mine Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch your questions.' });
-  }
-});
+    async function loadQuestion() {
+      if (!questionId) {
+        document.getElementById('question').innerHTML = "<p class='text-red-500'>❌ Question ID not found.</p>";
+        return;
+      }
 
-// 🔐 GET /api/questions/all — Get all questions
-router.get('/all', authenticateToken, async (req, res) => {
-  try {
-    const [rows] = await db.execute(
-      'SELECT * FROM questions ORDER BY id DESC'
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error('❌ All Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch questions.' });
-  }
-});
+      try {
+        const res = await fetch('/api/questions/all', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-// 🔐 GET /api/questions/others — Get questions from other users
-router.get('/others', authenticateToken, async (req, res) => {
-  try {
-    const [rows] = await db.execute(
-      'SELECT * FROM questions WHERE user_id != ? ORDER BY id DESC',
-      [req.user.id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error('❌ Others Error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch others\' questions.' });
-  }
-});
+        const questions = await res.json();
+        const match = questions.find(q => q.id == questionId);
 
-module.exports = router;
+        if (!match) {
+          document.getElementById('question').innerHTML = "<p class='text-red-500'>❌ Question not found.</p>";
+          return;
+        }
+
+        document.getElementById('question').innerHTML = `
+          <h2 class="text-xl font-bold text-blue-700">${match.topic}</h2>
+          <p class="text-slate-800 text-lg">${match.question}</p>
+          <p class="text-sm text-slate-500">Question ID: ${match.id}</p>
+        `;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('question').innerHTML = "<p class='text-red-500'>❌ Error loading question.</p>";
+      }
+    }
+
+    window.onload = loadQuestion;
+  </script>
+
+</body>
+</html>
