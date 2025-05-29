@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyWrench - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans">
+
+  <!-- Layout Wrapper -->
+  <div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md fixed h-full z-50">
+      <div class="p-6 border-b">
+        <h1 class="text-2xl font-bold text-blue-600">StudyWrench</h1>
+      </div>
+      <nav class="mt-6 space-y-4 px-6">
+        <a href="#ask" class="block text-slate-700 hover:text-blue-600 font-medium">Ask Questions</a>
+        <a href="#flashcards" class="block text-slate-700 hover:text-blue-600 font-medium">Flashcards</a>
+        <a href="#careers" class="block text-slate-700 hover:text-blue-600 font-medium">Career Paths</a>
+        <a href="#guides" class="block text-slate-700 hover:text-blue-600 font-medium">Study Guides</a>
+        <a href="index.html" class="block text-sm text-slate-400 mt-8 hover:text-slate-700">← Back to Home</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 flex-grow p-10">
+
+      <!-- Dashboard Header -->
+      <div class="bg-white shadow rounded-xl p-6 mb-10">
+        <h2 class="text-3xl font-bold text-blue-600">Welcome to Your Dashboard</h2>
+        <p class="text-slate-600">Submit a question or explore resources below.</p>
+      </div>
+
+      <!-- Ask Questions Section -->
+      <section id="ask" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Ask a Question</h3>
+        <form id="questionForm" class="space-y-4">
+          <input type="text" id="topic" placeholder="Topic (e.g. HVAC, Electrical)" class="w-full px-4 py-2 border border-slate-300 rounded" required>
+          <textarea id="questionText" placeholder="Type your question here..." class="w-full px-4 py-2 border border-slate-300 rounded h-32" required></textarea>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded font-bold">
+            Submit
+          </button>
+        </form>
+      </section>
+
+      <!-- Questions Display -->
+      <section class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Submitted Questions</h3>
+        <ul id="questionsList" class="space-y-2"></ul>
+      </section>
+
+      <!-- Flashcards Section -->
+      <section id="flashcards" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Flashcards</h3>
+        <p class="text-slate-500">Coming soon...</p>
+      </section>
+
+      <!-- Career Paths Section -->
+      <section id="careers" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Career Paths</h3>
+        <p class="text-slate-500">Coming soon...</p>
+      </section>
+
+      <!-- Study Guides Section -->
+      <section id="guides" class="bg-white shadow rounded-xl p-6 mb-10">
+        <h3 class="text-xl font-semibold mb-4">Study Guides</h3>
+        <p class="text-slate-500">Coming soon...</p>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Submit question
+    document.getElementById('questionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      const topic = document.getElementById('topic').value;
+      const question = document.getElementById('questionText').value;
+
+      if (!token) return alert('You must be logged in');
+
+      const user_id = 1;
+
+      const res = await fetch('/api/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ question, topic, user_id })
+      });
+
+      const text = await res.text();
+      alert(text);
+      document.getElementById('questionForm').reset();
+      loadQuestions();
+    });
+
+    // Load questions
+    async function loadQuestions() {
+      const res = await fetch('/api/questions');
+      const data = await res.json();
+
+      const list = document.getElementById('questionsList');
+      list.innerHTML = '';
+
+      data.reverse().forEach(q => {
+        const item = document.createElement('li');
+        item.className = 'bg-slate-50 p-4 rounded shadow';
+        item.innerHTML = '<strong>' + q.topic + ':</strong><br>' + q.question;
+        list.appendChild(item);
+      });
+    }
+
+    window.onload = loadQuestions;
+  </script>
+</body>
+</html>
