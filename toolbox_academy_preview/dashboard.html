@@ -37,6 +37,7 @@
 
   <!-- Layout -->
   <div class="flex min-h-screen">
+
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-md fixed h-full z-40">
       <div class="p-6 border-b">
@@ -72,7 +73,10 @@
 
       <!-- Submitted Questions -->
       <section class="bg-white shadow rounded-xl p-6 mb-10">
-        <h3 class="text-xl font-semibold mb-4">Submitted Questions</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold">Submitted Questions</h3>
+          <input type="text" id="searchInput" placeholder="Search..." class="border border-slate-300 rounded px-3 py-1 text-sm" />
+        </div>
         <ul id="questionsList" class="space-y-2 text-slate-700"></ul>
       </section>
 
@@ -102,6 +106,7 @@
       document.getElementById('loader').classList.add('fade-out');
     });
 
+    // Auth check
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in first.');
@@ -126,11 +131,18 @@
 
         data.reverse().forEach(q => {
           const li = document.createElement('li');
-          li.className = 'bg-slate-50 p-4 rounded shadow';
+          li.className = 'bg-slate-50 p-4 rounded shadow flex justify-between items-start';
+
           li.innerHTML = `
-            <a href="questions.html?id=${q.id}" class="text-blue-600 hover:underline">
-              <strong>${q.topic}</strong><br>${q.question}
-            </a>
+            <div>
+              <a href="questions.html?id=${q.id}" class="text-blue-600 hover:underline font-bold">${q.topic}</a>
+              <p class="text-slate-800">${q.question}</p>
+              <p class="text-sm text-slate-500">👤 You</p>
+            </div>
+            <div class="space-x-2">
+              <button class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200">✏️ Edit</button>
+              <button class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200">🗑️ Delete</button>
+            </div>
           `;
           list.appendChild(li);
         });
@@ -140,16 +152,12 @@
       }
     }
 
-    // Submit question handler
+    // Submit form handler
     document.getElementById('questionForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
       const topic = document.getElementById('topic')?.value?.trim();
       const question = document.getElementById('questionText')?.value?.trim();
-
-      console.log("🧪 Token:", token);
-      console.log("📚 Topic:", topic);
-      console.log("💬 Question:", question);
 
       if (!token || !topic || !question) {
         alert("❌ Missing topic, question, or user.");
@@ -181,6 +189,16 @@
       }
     });
 
+    // Search filter
+    document.getElementById('searchInput').addEventListener('input', function () {
+      const search = this.value.toLowerCase();
+      document.querySelectorAll('#questionsList li').forEach(li => {
+        const text = li.textContent.toLowerCase();
+        li.style.display = text.includes(search) ? 'block' : 'none';
+      });
+    });
+
+    // Load questions on page load
     window.onload = loadQuestions;
   </script>
 </body>
