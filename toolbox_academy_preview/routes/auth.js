@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); // ✅ FIXED: use bcryptjs
+const bcrypt = require('bcryptjs'); // ✅ Use bcryptjs
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
@@ -13,7 +13,7 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Check for duplicate email
+    // Check if user exists
     const [existing] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Email already registered.' });
@@ -25,10 +25,10 @@ router.post('/register', async (req, res) => {
       [email, hashedPassword]
     );
 
-    res.status(201).json({ message: 'Registration successful.' });
+    return res.status(201).json({ message: 'Registration successful.' });
   } catch (err) {
     console.error('❌ Registration error:', err.message);
-    res.status(500).json({ error: 'Registration failed.' });
+    return res.status(500).json({ error: 'Registration failed.' });
   }
 });
 
@@ -59,10 +59,10 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.json({ token });
+    return res.json({ token });
   } catch (err) {
     console.error('❌ Login error:', err.message);
-    res.status(500).json({ error: 'Login failed.' });
+    return res.status(500).json({ error: 'Login failed.' });
   }
 });
 
